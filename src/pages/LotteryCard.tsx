@@ -9,24 +9,32 @@ const mockData = [
         return {id: r, isCheck: false, key: `${r}-${i + 1}`}
     }))
 ]
+const mockWinD=['谢谢顾客','一等奖','谢谢顾客','二等奖','谢谢顾客','三等奖']
 const LotteryCard = () => {
     const numRef=useRef<RefProps>(null)
     const [p,setP]=useState(0)
+    const [index,setindex]=useState(-1)
     const submit=()=>{
         Toast.success('投注成功,投注号码...'+numRef.current!.total[0].id)
+        const i =mockData.findIndex(it=>it.id===numRef.current!.total[0].id)
         setTimeout(()=>{
             numRef.current?.clearS()
+            setindex(i)
             setP(0)
         },1000)
+        setTimeout(()=>{
+            setindex(-1)
+        },3000)
     }
     return (
         <>
-            <NavHeader tit={'刮刮乐'}/>
+            <NavHeader tit={'翻翻乐'}/>
             <div className={css`
                 width: 100%;
                 height: 100%;
             `}>
-                <Card/>
+                {/*<Card/>*/}
+                <CardCom index={index}/>
                 <Num state={mockData} setP={setP} ref={numRef} />
                 <SubmitBar onSubmit={submit} price={p} label='价格' currency='' buttonText="投注" />
             </div>
@@ -86,12 +94,94 @@ const Card = () => {
         </div>
     )
 }
+const CardCom=({index}:{index:number})=> {
+    return <div className={css`
+        height: 150px;
+        padding: 10px;
+
+        > ul {
+            padding: 15px;
+            box-sizing: border-box;
+            border: 1px solid aqua;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            grid-gap: 15px;
+
+            > li {
+                transform-style: preserve-3d;
+                position: relative;
+                animation: rotate-reverse 1.2s cubic-bezier(0.66, -0.47, 0.33, 1.5) forwards;
+
+                &.act {
+                    animation: rotate 1.5s cubic-bezier(0.66, -0.47, 0.33, 1.5) forwards;
+                }
+
+                > div {
+                    backface-visibility: hidden;
+                    width: 100%;
+                    height: 100%;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                }
+
+                > div:first-child {
+                    &::before{
+                        content: '待开奖';
+                        position: absolute;
+                        left: 50%;
+                        top: 50%;
+                        transform: translate(-50%,-50%);
+                    }
+                    background: rgba(51, 51, 51, 0.22);
+                }
+
+                > div:last-child {
+                    text-align: center;
+                    line-height: 50px;
+                    border: orange solid 1px;
+                    transform: rotateY(180deg);
+                }
+            }
+        }
+
+        @keyframes rotate-reverse {
+            0% {
+                transform: rotateY(180deg);
+            }
+
+            100% {
+                transform: rotateY(0deg);
+            }
+        }
+        @keyframes rotate {
+            0% {
+                transform: rotateY(0deg);
+            }
+
+            100% {
+                transform: rotateY(180deg);
+            }
+        }
+    `}>
+        <ul>
+            {mockWinD.map((it,i) => <li className={i===index?'act':''}>
+                <div></div>
+                <div>{it}</div>
+            </li>)}
+        </ul>
+    </div>
+}
 type NumProps = {
     state: { id: number, isCheck: boolean, key: string }[],
-    setP:(n:number)=>void
+    setP: (n: number) => void
 }
-type RefProps={total:NumProps['state'],clearS():void}
-const Num= forwardRef<RefProps,NumProps>(({state,setP}, ref) => {
+type RefProps = { total: NumProps['state'], clearS(): void }
+const Num = forwardRef<RefProps, NumProps>(({state, setP}, ref) => {
     const [gKey, setGKey] = useState(state)
     useImperativeHandle(ref,()=>({
         total:gKey.filter(it=>it.isCheck),
